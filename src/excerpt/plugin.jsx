@@ -2,6 +2,7 @@ import {
 	PluginDocumentSettingPanel,
 } from '@wordpress/edit-post';
 import { useSelect } from '@wordpress/data';
+import { useState } from '@wordpress/element';
 import { store as editorStore } from '@wordpress/editor';
 import { useDispatch } from '@wordpress/data';
 import { TextareaControl, Button } from '@wordpress/components';
@@ -9,12 +10,14 @@ import { __ } from '@wordpress/i18n';
 
 export default function JetpackLocalAiPlugin() {
 	const { editPost } = useDispatch( 'core/editor' );
+	const [ isGenerating, setIsGenerating ] = useState( false );
 
-	const { excerpt, postId } = useSelect( select => {
+	const { excerpt, title, postId } = useSelect( select => {
 		const { getEditedPostAttribute, getCurrentPostId } = select( editorStore );
 
 		return {
 			excerpt: getEditedPostAttribute( 'excerpt' ) ?? '',
+			title: getEditedPostAttribute( 'title' ) ?? '',
 			postId: getCurrentPostId() ?? 0,
 		};
 	}, [] );
@@ -33,10 +36,37 @@ export default function JetpackLocalAiPlugin() {
 		return documentRawText.replace( /\n{2,}/g, '\n' ).trim();
 	}, [] );
 
+	function summarize() {
+		return ai.summarizer.create( {
+			type: "tl;dr",
+			length: "short",
+			sharedContext: `An article titled ${title}`,
+		} )
+		.then( summarizer => summarizer.summarize( postContent ) )
+		.then( summary => {
+			console.log( 'Summary generated:', summary );
+			editPost( { excerpt: summary } );
+			return Promise.resolve();
+		} );
+	}
+
 	function generateExcerpt() {
-		console.log( 'generateExcerpt' );
-		console.log( postContent );
-		editPost( { excerpt: 'potato' } );
+		console.log( 'generateExcerpt', postContent );
+		if( ! ai.summarizer ) {
+			console.warn( 'No AI summarizer found. Check your flags.' );
+			return;
+		}
+		ai.summarizer.capabilities().then( capabilities => {
+			console.log( 'Summarizer capabilities', capabilities );
+			if ( capabilities.available === 'readily' ) {
+				setIsGenerating( true );
+				summarize().finally( () => {
+					setIsGenerating( false );
+				} );
+			} else {
+				console.warn( 'AI summarizer not available.' );
+			}
+		} );
 	}
 
 	return (
@@ -45,17 +75,15 @@ export default function JetpackLocalAiPlugin() {
 			title="AI Excerpt"
 		>
 			<TextareaControl
-				__nextHasNoMarginBottom
 				label={ __( 'Write an excerpt (optional)', 'jetpack' ) }
 				onChange={ value => editPost( { excerpt: value } ) }
-				// help={ numberOfWords ? helpNumberOfWords : null }
 				value={ excerpt }
-				// disabled={ isTextAreaDisabled }
+				disabled={ isGenerating }
 			/>
 			<Button
 				onClick={ generateExcerpt }
 				variant="primary"
-				// disabled={ requestingState !== 'done' || requireUpgrade }
+				disabled={ isGenerating }
 			>
 				{ __( 'Generate Excerpt with AI', 'jetpack' ) }
 			</Button>
