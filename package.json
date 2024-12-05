@@ -1,0 +1,39 @@
+{
+	"name": "jetpack-local-ai",
+	"version": "0.0.1",
+	"description": "Jetpack Local AI",
+	"author": "Artpi",
+	"license": "GPL-2.0-or-later",
+	"main": "build/index.js",
+	"files": [
+		"build",
+		"jetpack-local-ai.php"
+	],
+	"scripts": {
+		"build": "wp-scripts build",
+		"format": "wp-scripts format",
+		"lint:css": "wp-scripts lint-style",
+		"lint:js": "wp-scripts lint-js",
+		"packages-update": "wp-scripts packages-update",
+		"plugin-zip": "wp-scripts plugin-zip",
+		"start": "wp-scripts start",
+		"wp-env": "wp-env",
+		"dev": "wp-scripts start"
+	},
+	"dependencies": {
+		"@wordpress/compose": "^6.27.0",
+		"@wordpress/data": "^9.20.0",
+		"@wordpress/edit-post": "^7.27.2",
+		"@wordpress/icons": "^9.46.0",
+		"@wordpress/plugins": "^6.18.0"
+	},
+	"devDependencies": {
+		"@babel/core": "^7.26.0",
+		"@babel/preset-react": "^7.26.3",
+		"@wordpress/env": "^9.2.0",
+		"@wordpress/scripts": "^27.0.0",
+		"babel-loader": "^9.2.1",
+		"eslint": "^8.56.0",
+		"prettier": "npm:wp-prettier@3.0.3"
+	}
+}
